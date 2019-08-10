@@ -196,7 +196,7 @@ find_available_crtc(drmModeRes *resources, drmModeConnector *connector, uint32_t
 static bool
 find_available_id(uint32_t *id)
 {
-	int index = ffsl(~drm.taken_ids);
+	int index = __builtin_ffsl(~drm.taken_ids);
 
 	if (index == 0)
 		return false;
