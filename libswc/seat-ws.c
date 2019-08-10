@@ -166,19 +166,6 @@ bind_seat(struct wl_client *client, void *data, uint32_t version, uint32_t id)
 	wl_seat_send_capabilities(resource, seat.capabilities);
 }
 
-static void
-update_capabilities(uint32_t capabilities)
-{
-	struct wl_resource *resource;
-
-	if (!(~seat.capabilities & capabilities))
-		return;
-
-	seat.capabilities |= capabilities;
-	wl_list_for_each(resource, &seat.resources, link)
-		wl_seat_send_capabilities(resource, seat.capabilities);
-}
-
 static int
 handle_ws_data(int fd, uint32_t mask, void *data)
 {
@@ -278,12 +265,12 @@ seat_initialize(const char *seat_name)
 		goto error0;
 	}
 
+	seat.capabilities = WL_SEAT_CAPABILITY_KEYBOARD | WL_SEAT_CAPABILITY_POINTER;
 	seat.global = wl_global_create(swc.display, &wl_seat_interface, 4, NULL, &bind_seat);
 
 	if (!seat.global)
 		goto error1;
 
-	seat.capabilities = 0;
 	wl_list_init(&seat.resources);
 	seat.swc_listener.notify = &handle_swc_event;
 	wl_signal_add(&swc.event_signal, &seat.swc_listener);
