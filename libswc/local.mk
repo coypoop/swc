@@ -17,7 +17,7 @@ $(dir)_TARGETS +=                   \
     $(dir)/$(LIBSWC_LINK)
 endif
 
-$(dir)_PACKAGES := libdrm libinput pixman-1 wayland-server wld xkbcommon
+$(dir)_PACKAGES := libdrm pixman-1 wayland-server wld xkbcommon
 $(dir)_CFLAGS += -Iprotocol
 
 SWC_SOURCES =                       \
