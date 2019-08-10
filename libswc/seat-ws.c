@@ -265,7 +265,7 @@ initialize_wscons(void)
 		 &handle_ws_data, NULL);
 	return true;
 error1:
-	close(seat.kbd_fd);
+	close(seat.mouse_fd);
 error0:
 	return false;
 }
