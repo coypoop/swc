@@ -40,7 +40,7 @@ SWC_SOURCES =                       \
     libswc/primary_plane.c          \
     libswc/region.c                 \
     libswc/screen.c                 \
-    libswc/seat.c                   \
+    libswc/seat-ws.c                \
     libswc/shell.c                  \
     libswc/shell_surface.c          \
     libswc/shm.c                    \
