@@ -112,7 +112,7 @@ client_handle_modifiers(struct keyboard *keyboard, const struct keyboard_modifie
 static bool
 update_keymap(struct xkb *xkb)
 {
-	char keymap_path[PATH_MAX];
+	char *keymap_path;
 	const char *keymap_directory;
 	char *keymap_string;
 	int ret;
@@ -134,7 +134,7 @@ update_keymap(struct xkb *xkb)
 		goto error0;
 	}
 
-	ret = snprintf(keymap_path, sizeof(keymap_path), "%s/swc-xkb-keymap-XXXXXX", keymap_directory);
+	ret = asprintf(&keymap_path, "%s/swc-xkb-keymap-XXXXXX", keymap_directory);
 	if (ret < 0 || (size_t)ret >= sizeof(keymap_path)) {
 		WARNING("Could not determine XKB keymap path\n");
 		goto error1;
