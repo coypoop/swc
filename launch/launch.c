@@ -43,11 +43,18 @@
 #ifdef __NetBSD__
 #include <dev/wscons/wsdisplay_usl_io.h>
 extern char **environ;
+#define TTY_MAJOR	(47)
+#define WSKBD_MAJOR	(48)
+#define WSMOUSE_MAJOR	(49)
+#define	DRM_MAJOR	(180)
 #else
 #include <linux/input.h>
 #include <linux/kd.h>
 #include <linux/major.h>
 #include <linux/vt.h>
+#ifndef DRM_MAJOR
+#define DRM_MAJOR 226
+#endif
 #endif
 
 #include <sys/socket.h>
@@ -55,10 +62,6 @@ extern char **environ;
 #include <sys/wait.h>
 #include <sys/ioctl.h>
 #include <xf86drm.h>
-
-#ifndef DRM_MAJOR
-#define DRM_MAJOR 226
-#endif
 
 #define ARRAY_LENGTH(array) (sizeof(array) / sizeof(array)[0])
 
@@ -216,7 +219,12 @@ handle_socket_data(int socket)
 		}
 
 		switch (major(st.st_rdev)) {
+#ifdef INPUT_MAJOR
 		case INPUT_MAJOR:
+#else
+		case WSKBD_MAJOR:
+		case WSMOUSE_MAJOR:
+#endif
 			if (!active)
 				goto fail;
 			if (num_input_fds == ARRAY_LENGTH(input_fds)) {
@@ -243,7 +251,12 @@ handle_socket_data(int socket)
 		}
 
 		switch (major(st.st_rdev)) {
+#ifdef INPUT_MAJOR
 		case INPUT_MAJOR:
+#else
+		case WSKBD_MAJOR:
+		case WSMOUSE_MAJOR:
+#endif
 			input_fds[num_input_fds++] = fd;
 			break;
 		case DRM_MAJOR:
@@ -286,6 +299,8 @@ find_vt(char *vt, size_t size)
 		tty0_fd = open("/dev/ttyE0", O_RDWR);
 		if (tty0_fd == -1)
 			die("open /dev/ttyE0:");
+		if (ioctl(tty0_fd, VT_OPENQRY, &vt_num) != 0)
+			die("VT open query failed:");
 		close(tty0_fd);
 		if (snprintf(vt, size, "/dev/ttyE%d", vt_num) >= size)
 			die("VT number is too large");

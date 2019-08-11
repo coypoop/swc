@@ -237,10 +237,10 @@ handle_ws_data(int fd, uint32_t mask, void *data)
 static bool
 initialize_wscons(void)
 {
-	if ((seat.mouse_fd = open("/dev/wsmouse", O_RDONLY | O_NONBLOCK)) == -1) {
+	if ((seat.mouse_fd = launch_open_device("/dev/wsmouse", O_RDONLY | O_NONBLOCK)) == -1) {
 		goto error0;
 	}
-	if ((seat.kbd_fd = open("/dev/wskbd", O_RDONLY | O_NONBLOCK)) == -1) {
+	if ((seat.kbd_fd = launch_open_device("/dev/wskbd", O_RDONLY | O_NONBLOCK)) == -1) {
 		goto error1;
 	}
 
