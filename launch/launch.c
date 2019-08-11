@@ -41,6 +41,7 @@
 #include <signal.h>
 
 #ifdef __NetBSD__
+#include <dev/wscons/wsconsio.h>
 #include <dev/wscons/wsdisplay_usl_io.h>
 extern char **environ;
 #define TTY_MAJOR	(47)
@@ -137,20 +138,16 @@ stop_devices(bool fatal)
 static void
 cleanup(void)
 {
-	struct vt_mode mode = {.mode = VT_AUTO};
-
-	if (!original_vt_state.altered)
-		return;
-
 	/* Cleanup VT */
-	ioctl(tty_fd, VT_SETMODE, &mode);
 	ioctl(tty_fd, KDSETMODE, original_vt_state.console_mode);
 	ioctl(tty_fd, KDSKBMODE, original_vt_state.kb_mode);
 
 	/* Stop devices before switching the VT to make sure we have released the DRM
 	 * device before the next session tries to claim it. */
 	stop_devices(false);
-	ioctl(tty_fd, VT_ACTIVATE, original_vt_state.vt);
+
+	int dispmode = WSDISPLAYIO_MODE_EMUL;
+	ioctl(tty_fd, WSDISPLAYIO_SMODE, &dispmode);
 
 	kill(0, SIGTERM);
 }
@@ -332,12 +329,6 @@ setup_tty(int fd)
 {
 	struct stat st;
 	int vt;
-	struct vt_stat state;
-	struct vt_mode mode = {
-		.mode = VT_PROCESS,
-		.relsig = SIGUSR1,
-		.acqsig = SIGUSR2
-	};
 
 	if (fstat(fd, &st) == -1)
 		die("failed to stat TTY fd:");
@@ -345,56 +336,10 @@ setup_tty(int fd)
 	if (major(st.st_rdev) != TTY_MAJOR || vt == 0)
 		die("not a valid VT");
 
-	if (ioctl(fd, VT_GETSTATE, &state) == -1)
-		die("failed to get the current VT state:");
-	original_vt_state.vt = state.v_active;
-	if (ioctl(fd, KDGKBMODE, &original_vt_state.kb_mode))
-		die("failed to get keyboard mode:");
-#ifndef KDGETMODE
-	original_vt_state.console_mode = KD_TEXT;
-#else
-	if (ioctl(fd, KDGETMODE, &original_vt_state.console_mode))
-		die("failed to get console mode:");
-#endif
+	int dispmode = WSDISPLAYIO_MODE_DUMBFB;
+	if (ioctl(fd, WSDISPLAYIO_SMODE, &dispmode) < 0)
+		die("Failed to set wsdisplay mode");
 
-#ifdef K_OFF
-	if (ioctl(fd, KDSKBMODE, K_OFF) == -1)
-		die("failed to set keyboard mode to K_OFF:");
-#endif
-	if (ioctl(fd, KDSETMODE, KD_GRAPHICS) == -1) {
-		perror("failed to set console mode to KD_GRAPHICS");
-		goto error0;
-	}
-	if (ioctl(fd, VT_SETMODE, &mode) == -1) {
-		perror("failed to set VT mode");
-		goto error1;
-	}
-
-	if (vt == original_vt_state.vt) {
-		activate();
-	} else if (!nflag) {
-		if (ioctl(fd, VT_ACTIVATE, vt) == -1) {
-			perror("failed to activate VT");
-			goto error2;
-		}
-
-		if (ioctl(fd, VT_WAITACTIVE, vt) == -1) {
-			perror("failed to wait for VT to become active");
-			goto error2;
-		}
-	}
-
-	original_vt_state.altered = true;
-
-	return;
-
-error2:
-	mode = (struct vt_mode){.mode = VT_AUTO };
-	ioctl(fd, VT_SETMODE, &mode);
-error1:
-	ioctl(fd, KDSETMODE, original_vt_state.console_mode);
-error0:
-	ioctl(fd, KDSKBMODE, original_vt_state.kb_mode);
 	exit(EXIT_FAILURE);
 }
 
