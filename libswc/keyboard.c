@@ -142,6 +142,7 @@ update_keymap(struct xkb *xkb)
 
 	xkb->keymap.size = strlen(keymap_string) + 1;
 	xkb->keymap.fd = mkostemp(keymap_path, O_CLOEXEC);
+	free(keymap_path);
 
 	if (xkb->keymap.fd == -1) {
 		WARNING("Could not create XKB keymap file\n");
