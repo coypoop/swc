@@ -206,7 +206,7 @@ handle_ws_data(int fd, uint32_t mask, void *data)
 			pointer_handle_relative_motion(&seat.pointer, time, pos, 0);
 			break;
 		case WSCONS_EVENT_MOUSE_DELTA_Y:
-			pos = wl_fixed_from_int(ev.value);
+			pos = wl_fixed_from_int(-ev.value);
 			pointer_handle_relative_motion(&seat.pointer, time, 0, pos);
 			break;
 		case WSCONS_EVENT_MOUSE_DELTA_Z:
@@ -220,7 +220,7 @@ handle_ws_data(int fd, uint32_t mask, void *data)
 			pointer_handle_absolute_motion(&seat.pointer, time, pos, 0);
 			break;
 		case WSCONS_EVENT_MOUSE_ABSOLUTE_Y:
-			pos = wl_fixed_from_int(ev.value);
+			pos = wl_fixed_from_int(-ev.value);
 			pointer_handle_absolute_motion(&seat.pointer, time, 0, pos);
 			break;	
 		case WSCONS_EVENT_MOUSE_ABSOLUTE_Z:
