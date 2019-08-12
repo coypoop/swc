@@ -115,6 +115,7 @@ update_keymap(struct xkb *xkb)
 	char *keymap_path;
 	const char *keymap_directory;
 	char *keymap_string;
+	size_t keymap_len;
 	int ret;
 
 	if (!(keymap_directory = getenv("XDG_RUNTIME_DIR")))
@@ -165,7 +166,13 @@ update_keymap(struct xkb *xkb)
 		goto error2;
 	}
 
-	strcpy(xkb->keymap.area, keymap_string);
+	keymap_len = strlen(keymap_string);
+	if (keymap_len >= xkb->keymap.size) {
+		WARNING("Keymap would truncate\n");
+		goto error2;
+	}
+
+	memcpy(xkb->keymap.area, keymap_string, keymap_len);
 	free(keymap_string);
 
 	return true;
