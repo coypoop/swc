@@ -34,14 +34,15 @@
 #include "surface.h"
 #include "util.h"
 
-#include <dev/wscons/wsconsio.h>
-
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
+
+#include <dev/wscons/wsconsio.h>
+#include <sys/ioctl.h>
 
 static struct {
 	char *name;
@@ -237,12 +238,18 @@ handle_ws_data(int fd, uint32_t mask, void *data)
 static bool
 initialize_wscons(void)
 {
+	int mouse_ver = WSMOUSE_EVENT_VERSION;
+	int kbd_ver = WSKBDIO_EVENT_VERSION;
+
 	if ((seat.mouse_fd = launch_open_device("/dev/wsmouse", O_RDONLY | O_NONBLOCK)) == -1) {
 		goto error0;
 	}
 	if ((seat.kbd_fd = launch_open_device("/dev/wskbd", O_RDONLY | O_NONBLOCK)) == -1) {
 		goto error1;
 	}
+
+	(void)ioctl(seat.mouse_fd, WSMOUSEIO_SETVERSION, &mouse_ver);
+	(void)ioctl(seat.kbd_fd, WSKBDIO_SETVERSION, &kbd_ver);
 
 	seat.kbd_source = wl_event_loop_add_fd
 		(swc.event_loop, seat.kbd_fd, WL_EVENT_READABLE,
