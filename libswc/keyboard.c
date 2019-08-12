@@ -115,7 +115,6 @@ update_keymap(struct xkb *xkb)
 	char *keymap_path;
 	const char *keymap_directory;
 	char *keymap_string;
-	size_t keymap_len;
 	int ret;
 
 	if (!(keymap_directory = getenv("XDG_RUNTIME_DIR")))
@@ -154,10 +153,12 @@ update_keymap(struct xkb *xkb)
 
 #ifndef __NetBSD__
 	if (posix_fallocate(xkb->keymap.fd, 0, xkb->keymap.size) != 0) {
+#else
+	if (ftruncate(xkb->keymap.fd, xkb->keymap.size) != 0) {
+#endif
 		WARNING("Could not resize XKB keymap file\n");
 		goto error2;
 	}
-#endif
 
 	xkb->keymap.area = mmap(NULL, xkb->keymap.size, PROT_READ | PROT_WRITE, MAP_SHARED, xkb->keymap.fd, 0);
 
@@ -166,13 +167,7 @@ update_keymap(struct xkb *xkb)
 		goto error2;
 	}
 
-	keymap_len = strlen(keymap_string);
-	if (keymap_len >= xkb->keymap.size) {
-		WARNING("Keymap would truncate\n");
-		goto error2;
-	}
-
-	memcpy(xkb->keymap.area, keymap_string, keymap_len);
+	memcpy(xkb->keymap.area, keymap_string, xkb->keymap.size);
 	free(keymap_string);
 
 	return true;
