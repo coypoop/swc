@@ -340,6 +340,8 @@ setup_tty(int fd)
 	dispmode = WSDISPLAYIO_MODE_MAPPED;
 	if (ioctl(fd, WSDISPLAYIO_SMODE, &dispmode) < 0)
 		die("Failed to set wsdisplay mode");
+
+	original_vt_state.altered = true;
 }
 
 static void
