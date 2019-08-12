@@ -322,6 +322,7 @@ open_tty(const char *tty_name)
 static void
 setup_tty(int fd)
 {
+	int ver = WSDISPLAYIO_EVENT_VERSION;
 	int dispmode;
 	struct stat st;
 	int vt;
@@ -336,6 +337,9 @@ setup_tty(int fd)
 		die("Failed to get wsdisplay mode");
 
 	original_vt_state.console_mode = dispmode;
+
+	if (ioctl(fd, WSDISPLAYIO_SETVERSION, &ver) == -1)
+		die("Failed to set wsdisplay protocol version");
 
 	dispmode = WSDISPLAYIO_MODE_MAPPED;
 	if (ioctl(fd, WSDISPLAYIO_SMODE, &dispmode) < 0)
