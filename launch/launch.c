@@ -336,11 +336,9 @@ setup_tty(int fd)
 	if (major(st.st_rdev) != TTY_MAJOR || vt == 0)
 		die("not a valid VT");
 
-	int dispmode = WSDISPLAYIO_MODE_DUMBFB;
+	int dispmode = WSDISPLAYIO_MODE_MAPPED;
 	if (ioctl(fd, WSDISPLAYIO_SMODE, &dispmode) < 0)
 		die("Failed to set wsdisplay mode");
-
-	exit(EXIT_FAILURE);
 }
 
 static void
