@@ -135,7 +135,7 @@ update_keymap(struct xkb *xkb)
 	}
 
 	ret = asprintf(&keymap_path, "%s/swc-xkb-keymap-XXXXXX", keymap_directory);
-	if (ret < 0 || (size_t)ret >= sizeof(keymap_path)) {
+	if (ret < 0) {
 		WARNING("Could not determine XKB keymap path\n");
 		goto error1;
 	}
