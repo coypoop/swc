@@ -242,9 +242,11 @@ initialize_wscons(void)
 	int kbd_ver = WSKBDIO_EVENT_VERSION;
 
 	if ((seat.mouse_fd = launch_open_device("/dev/wsmouse", O_RDONLY | O_NONBLOCK)) == -1) {
+		ERROR("Could not open mouse device\n");
 		goto error0;
 	}
 	if ((seat.kbd_fd = launch_open_device("/dev/wskbd", O_RDONLY | O_NONBLOCK)) == -1) {
+		ERROR("Could not open keyboard device\n");
 		goto error1;
 	}
 
