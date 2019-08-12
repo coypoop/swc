@@ -46,6 +46,7 @@ extern char **environ;
 #define TTY_MAJOR	(47)
 #define WSKBD_MAJOR	(48)
 #define WSMOUSE_MAJOR	(49)
+#define WSMUX_MAJOR	(65)
 #define	DRM_MAJOR	(180)
 #else
 #include <linux/input.h>
@@ -224,6 +225,7 @@ handle_socket_data(int socket)
 #else
 		case WSKBD_MAJOR:
 		case WSMOUSE_MAJOR:
+		case WSMUX_MAJOR:
 #endif
 			if (!active)
 				goto fail;
@@ -239,7 +241,7 @@ handle_socket_data(int socket)
 			}
 			break;
 		default:
-			fprintf(stderr, "device is not an input device\n");
+			fprintf(stderr, "device major id %d is not an input or drm device\n", major(st.st_rdev));
 			goto fail;
 		}
 
@@ -256,6 +258,7 @@ handle_socket_data(int socket)
 #else
 		case WSKBD_MAJOR:
 		case WSMOUSE_MAJOR:
+		case WSMUX_MAJOR:
 #endif
 			input_fds[num_input_fds++] = fd;
 			break;
