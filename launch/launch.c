@@ -138,16 +138,11 @@ stop_devices(bool fatal)
 static void
 cleanup(void)
 {
-	/* Cleanup VT */
-	ioctl(tty_fd, KDSETMODE, original_vt_state.console_mode);
-	ioctl(tty_fd, KDSKBMODE, original_vt_state.kb_mode);
-
 	/* Stop devices before switching the VT to make sure we have released the DRM
 	 * device before the next session tries to claim it. */
 	stop_devices(false);
 
-	int dispmode = WSDISPLAYIO_MODE_EMUL;
-	ioctl(tty_fd, WSDISPLAYIO_SMODE, &dispmode);
+	ioctl(tty_fd, WSDISPLAYIO_SMODE, original_vt_state.console_mode);
 
 	kill(0, SIGTERM);
 }
@@ -327,6 +322,7 @@ open_tty(const char *tty_name)
 static void
 setup_tty(int fd)
 {
+	int dispmode;
 	struct stat st;
 	int vt;
 
@@ -336,7 +332,12 @@ setup_tty(int fd)
 	if (major(st.st_rdev) != TTY_MAJOR || vt == 0)
 		die("not a valid VT");
 
-	int dispmode = WSDISPLAYIO_MODE_MAPPED;
+	if (ioctl(fd, WSDISPLAYIO_GMODE, &dispmode) < 0)
+		die("Failed to get wsdisplay mode");
+
+	original_vt_state.console_mode = dispmode;
+
+	dispmode = WSDISPLAYIO_MODE_MAPPED;
 	if (ioctl(fd, WSDISPLAYIO_SMODE, &dispmode) < 0)
 		die("Failed to set wsdisplay mode");
 }
