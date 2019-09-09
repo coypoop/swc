@@ -58,9 +58,6 @@ bind_data_device_manager(struct wl_client *client, void *data, uint32_t version,
 {
 	struct wl_resource *resource;
 
-	if (version > 1)
-		version = 1;
-
 	resource = wl_resource_create(client, &wl_data_device_manager_interface, version, id);
 	wl_resource_set_implementation(resource, &data_device_manager_implementation, NULL, NULL);
 }
@@ -68,7 +65,7 @@ bind_data_device_manager(struct wl_client *client, void *data, uint32_t version,
 bool
 data_device_manager_initialize(void)
 {
-	data_device_manager.global = wl_global_create(swc.display, &wl_data_device_manager_interface, 1,
+	data_device_manager.global = wl_global_create(swc.display, &wl_data_device_manager_interface, 3,
 	                                              NULL, &bind_data_device_manager);
 
 	return data_device_manager.global != NULL;
