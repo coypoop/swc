@@ -149,10 +149,7 @@ resize(struct wl_client *client, struct wl_resource *resource, size_t size)
 	struct pool *pool = wl_resource_get_user_data(resource);
 	void *data;
 
-#ifndef MREMAP_MAYMOVE
-#define MREMAP_MAYMOVE 0
-#endif
-	data = mremap(pool->data, pool->size, size, MREMAP_MAYMOVE, NULL);
+	data = mremap(pool->data, pool->size, NULL, size, 0);
 
 	if (data == MAP_FAILED) {
 		wl_resource_post_error(resource, WL_SHM_ERROR_INVALID_FD, "mremap failed: %s", strerror(errno));
