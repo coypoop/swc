@@ -116,60 +116,6 @@ static const struct wl_drm_interface drm_implementation = {
 	.create_prime_buffer = create_prime_buffer,
 };
 
-static int
-select_card(const struct dirent *entry)
-{
-	unsigned num;
-	return sscanf(entry->d_name, "card%u", &num) == 1;
-}
-
-static bool
-find_primary_drm_device(char *path, size_t size)
-{
-	struct dirent **cards, *card = NULL;
-	int num_cards, ret;
-	unsigned index;
-	FILE *file;
-	unsigned char boot_vga;
-
-	num_cards = scandir("/dev/dri", &cards, &select_card, &alphasort);
-
-	if (num_cards == -1)
-		return false;
-
-	for (index = 0; index < num_cards; ++index) {
-		snprintf(path, size, "/sys/class/drm/%s/device/boot_vga", cards[index]->d_name);
-
-		if ((file = fopen(path, "r"))) {
-			ret = fscanf(file, "%hhu", &boot_vga);
-			fclose(file);
-
-			if (ret == 1 && boot_vga) {
-				free(card);
-				card = cards[index];
-				DEBUG("/dev/dri/%s is the primary GPU\n", card->d_name);
-				break;
-			}
-		}
-
-		if (!card)
-			card = cards[index];
-		else
-			free(cards[index]);
-	}
-
-	free(cards);
-
-	if (!card)
-		return false;
-
-	if (snprintf(path, size, "/dev/dri/%s", card->d_name) >= size)
-		return false;
-
-	free(card);
-	return true;
-}
-
 static bool
 find_available_crtc(drmModeRes *resources, drmModeConnector *connector, uint32_t taken_crtcs, int *crtc_index)
 {
@@ -254,17 +200,11 @@ bool
 drm_initialize(void)
 {
 	uint64_t val;
-	char primary[128];
-
-	if (!find_primary_drm_device(primary, sizeof(primary))) {
-		ERROR("Could not find DRM device\n");
-		goto error0;
-	}
 
 	drm.taken_ids = 0;
-	swc.drm->fd = launch_open_device(primary, O_RDWR | O_CLOEXEC);
+	swc.drm->fd = launch_open_device("/dev/dri/card0", O_RDWR | O_CLOEXEC);
 	if (swc.drm->fd == -1) {
-		ERROR("Could not open DRM device at %s\n", primary);
+		ERROR("Could not open DRM device\n");
 		goto error0;
 	}
 	if (drmGetCap(swc.drm->fd, DRM_CAP_CURSOR_WIDTH, &val) < 0)
