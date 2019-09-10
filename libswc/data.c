@@ -66,10 +66,25 @@ offer_destroy(struct wl_client *client, struct wl_resource *offer)
 	wl_resource_destroy(offer);
 }
 
+static void
+offer_finish(struct wl_client *client, struct wl_resource *offer)
+{
+	/* TODO: Implement */
+}
+
+static void
+offer_set_actions(struct wl_client *client, struct wl_resource *offer,
+	          uint32_t dnd_actions, uint32_t preferred_action)
+{
+	/* TODO: Implement */
+}
+
 static struct wl_data_offer_interface data_offer_implementation = {
 	.accept = offer_accept,
 	.receive = offer_receive,
 	.destroy = offer_destroy,
+	.finish = offer_finish,
+	.set_actions = offer_set_actions,
 };
 
 static void

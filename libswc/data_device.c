@@ -56,9 +56,18 @@ set_selection(struct wl_client *client, struct wl_resource *resource, struct wl_
 	send_event(&data_device->event_signal, DATA_DEVICE_EVENT_SELECTION_CHANGED, NULL);
 }
 
+static void
+release(struct wl_client *client, struct wl_resource *resource)
+{
+	struct data_device *data_device = wl_resource_get_user_data(resource);
+
+	data_device_finalize(data_device);
+}
+
 static struct wl_data_device_interface data_device_implementation = {
 	.start_drag = start_drag,
 	.set_selection = set_selection,
+	.release = release
 };
 
 static void
