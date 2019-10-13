@@ -184,13 +184,18 @@ bool
 keyboard_initialize(struct keyboard *keyboard)
 {
 	struct xkb *xkb = &keyboard->xkb;
+	struct xkb_rule_names names = {0};
+
+	names.rules = "base";
+	names.model = "pc105";
+	names.layout = "us";
 
 	if (!(xkb->context = xkb_context_new(0))) {
 		ERROR("Could not create XKB context\n");
 		goto error0;
 	}
 
-	if (!(xkb->keymap.map = xkb_keymap_new_from_names(xkb->context, NULL, 0))) {
+	if (!(xkb->keymap.map = xkb_keymap_new_from_names(xkb->context, &names, 0))) {
 		ERROR("Could not create XKB keymap\n");
 		goto error1;
 	}

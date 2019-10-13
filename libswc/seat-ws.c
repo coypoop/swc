@@ -33,6 +33,8 @@
 #include "screen.h"
 #include "surface.h"
 #include "util.h"
+#include "at-keynames-x11.h"
+#include "seat-ws-map.h"
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -51,6 +53,8 @@ static struct {
 	int mouse_fd;
 	int kbd_fd;
 	bool ignore;
+
+	unsigned kbd_type;
 
 	struct wl_event_source *mouse_source;
 	struct wl_event_source *kbd_source;
@@ -168,6 +172,31 @@ bind_seat(struct wl_client *client, void *data, uint32_t version, uint32_t id)
 }
 
 static int
+ws_to_xkb(unsigned type, int key)
+{
+	switch (type) {
+	case WSKBD_TYPE_PC_XT:
+	case WSKBD_TYPE_PC_AT:
+		return wsXtMap[key];
+	case WSKBD_TYPE_USB:
+	case WSKBD_TYPE_MAPLE:
+		return wsUsbMap[key];
+#if 0
+	case WSKBD_TYPE_ADB:
+		return wsAdbMap[key];
+	case WSKBD_TYPE_LK201:
+		return wsLk201Map[key];
+	case WSKBD_TYPE_SUN5:
+	case WSKBD_TYPE_SUN:
+		return wsSunMap[key];
+#endif
+	default:
+		fprintf(stderr, "Unknown wskbd type %d\n", type);
+		return key;
+	}
+}
+
+static int
 handle_ws_data(int fd, uint32_t mask, void *data)
 {
 	struct wscons_event ev;
@@ -181,12 +210,12 @@ handle_ws_data(int fd, uint32_t mask, void *data)
 		switch (ev.type) {
 		case WSCONS_EVENT_KEY_UP:
 			state = WL_KEYBOARD_KEY_STATE_RELEASED;
-			key = ev.value;
+			key = ws_to_xkb(seat.kbd_type, ev.value);
 			keyboard_handle_key(&seat.keyboard, time, key, state);
 			break;
 		case WSCONS_EVENT_KEY_DOWN:
 			state = WL_KEYBOARD_KEY_STATE_PRESSED;
-			key = ev.value;
+			key = ws_to_xkb(seat.kbd_type, ev.value);
 			keyboard_handle_key(&seat.keyboard, time, key, state);
 			break;
 		case WSCONS_EVENT_ALL_KEYS_UP:
@@ -252,6 +281,11 @@ initialize_wscons(void)
 
 	(void)ioctl(seat.mouse_fd, WSMOUSEIO_SETVERSION, &mouse_ver);
 	(void)ioctl(seat.kbd_fd, WSKBDIO_SETVERSION, &kbd_ver);
+
+	if (ioctl(seat.kbd_fd, WSKBDIO_GTYPE, &seat.kbd_type) == -1) {
+		ERROR("Could not get keyboard type\n");
+		goto error1;
+	}
 
 	seat.kbd_source = wl_event_loop_add_fd
 		(swc.event_loop, seat.kbd_fd, WL_EVENT_READABLE,
