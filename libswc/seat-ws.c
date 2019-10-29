@@ -197,6 +197,12 @@ ws_to_xkb(unsigned type, int key)
 }
 
 static int
+wsmouse_to_evdev(int button)
+{
+	return button + 0x110;
+}
+
+static int
 handle_ws_data(int fd, uint32_t mask, void *data)
 {
 	struct wscons_event ev;
@@ -222,12 +228,12 @@ handle_ws_data(int fd, uint32_t mask, void *data)
 			break;
 		case WSCONS_EVENT_MOUSE_UP:
 			state = WL_POINTER_BUTTON_STATE_RELEASED;
-			key = ev.value;
+			key = wsmouse_to_evdev(ev.value);
 			pointer_handle_button(&seat.pointer, time, key, state);
 			break;
 		case WSCONS_EVENT_MOUSE_DOWN:
 			state = WL_POINTER_BUTTON_STATE_PRESSED;
-			key = ev.value;
+			key = wsmouse_to_evdev(ev.value);
 			pointer_handle_button(&seat.pointer, time, key, state);
 			break;
 		case WSCONS_EVENT_MOUSE_DELTA_X:
