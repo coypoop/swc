@@ -199,7 +199,15 @@ ws_to_xkb(unsigned type, int key)
 static int
 wsmouse_to_evdev(int button)
 {
-	return button + 0x110;
+	/* The right and middle mouse buttons must be swapped. */
+	switch (button) {
+	case 1: /* Middle */
+		return 0x112;
+	case 2: /* Right */
+		return 0x111;
+	default:
+		return button + 0x110;
+	}
 }
 
 static int
